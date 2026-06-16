@@ -10,7 +10,7 @@
     "test": "node --test",
     "check": "node --check src/index.js && node --check bin/cli.js",
     "build": "npm run check",
-    "smoke": "node bin/cli.js fixtures/clean-skill/SKILL.md"
+    "smoke": "node bin/cli.js fixtures/clean-skill"
   },
   "keywords": [
     "agent-skill",
