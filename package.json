@@ -11,7 +11,8 @@
     "check": "node --check src/index.js && node --check bin/cli.js",
     "build": "npm run check",
     "smoke": "node bin/cli.js fixtures/clean-skill",
-    "package:smoke": "npm pack --dry-run"
+    "package:smoke": "npm pack --dry-run",
+    "release:check": "npm run check && npm run build && npm test && npm run smoke && npm run package:smoke"
   },
   "keywords": [
     "agent-skill",
@@ -26,5 +27,17 @@
   "bugs": {
     "url": "https://github.com/rogerchappel/skill-portability-audit/issues"
   },
-  "homepage": "https://github.com/rogerchappel/skill-portability-audit#readme"
+  "homepage": "https://github.com/rogerchappel/skill-portability-audit#readme",
+  "files": [
+    "bin",
+    "src",
+    "fixtures",
+    "docs",
+    "SKILL.md",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md"
+  ]
 }
