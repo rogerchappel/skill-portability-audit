@@ -17,5 +17,9 @@
     "cli",
     "dry-run"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/skill-portability-audit.git"
+  }
 }
