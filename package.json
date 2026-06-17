@@ -1,0 +1,21 @@
+{
+  "name": "skill-portability-audit",
+  "version": "0.1.0",
+  "description": "Audit agent skills for portability, approvals, and local-machine assumptions.",
+  "type": "module",
+  "bin": {
+    "skill-portability-audit": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/index.js && node --check bin/cli.js",
+    "build": "npm run check",
+    "smoke": "node bin/cli.js fixtures/clean-skill"
+  },
+  "keywords": [
+    "agent-skill",
+    "cli",
+    "dry-run"
+  ],
+  "license": "MIT"
+}
