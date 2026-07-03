@@ -27,3 +27,13 @@ This project is local-first and read-only. It prints plans or reports to stdout 
 ## Limitations
 
 The heuristics are intentionally conservative. Review output before using it in an automated workflow.
+
+## Local Verification
+
+```sh
+npm run check
+npm test
+npm run smoke
+npm run package:smoke
+npm run release:check
+```
