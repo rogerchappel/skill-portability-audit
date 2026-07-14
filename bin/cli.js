@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { auditSkill, renderMarkdown } from '../src/index.js';
 
 const args = process.argv.slice(2);
