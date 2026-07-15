@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { auditSkill } from '../src/index.js';
 
 test('passes a portable skill fixture', () => {
@@ -20,4 +21,12 @@ test('runs directly through the package bin entrypoint', () => {
   const output = execFileSync('./bin/cli.js', ['fixtures/clean-skill'], { encoding: 'utf8' });
   assert.match(output, /Skill Portability Audit/);
   assert.match(output, /Passed: yes/);
+});
+
+test('prints stable help and version output', () => {
+  const help = execFileSync('./bin/cli.js', ['--help'], { encoding: 'utf8' });
+  const version = execFileSync('./bin/cli.js', ['--version'], { encoding: 'utf8' }).trim();
+  const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
+  assert.match(help, /Usage: skill-portability-audit/);
+  assert.equal(version, packageJson.version);
 });
