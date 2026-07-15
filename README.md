@@ -5,8 +5,8 @@ Audit agent skills for portability, approvals, and local-machine assumptions.
 ## Quickstart
 
 ```bash
-npm test
-npm run smoke
+npm install
+npm run release:check
 ```
 
 ## CLI
@@ -14,6 +14,8 @@ npm run smoke
 ```bash
 node bin/cli.js fixtures/clean-skill/SKILL.md
 node bin/cli.js fixtures/clean-skill/SKILL.md --json
+skill-portability-audit --help
+skill-portability-audit --version
 ```
 
 ## Library
