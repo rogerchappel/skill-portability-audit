@@ -28,7 +28,7 @@ This project is local-first and read-only. It prints plans or reports to stdout 
 
 ## Limitations
 
-The heuristics are intentionally conservative. Review output before using it in an automated workflow.
+The heuristics are intentionally conservative. Symbolic links are skipped so an audit cannot leave the requested skill tree or recurse through a link cycle. Review output before using it in an automated workflow.
 
 ## Local Verification
 
