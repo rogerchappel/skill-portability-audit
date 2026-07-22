@@ -1,11 +1,11 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 function listMarkdown(root) {
   const out = [];
   for (const entry of readdirSync(root)) {
     const path = join(root, entry);
-    const stat = statSync(path);
+    const stat = lstatSync(path);
     if (stat.isDirectory() && !['node_modules','.git'].includes(entry)) out.push(...listMarkdown(path));
     if (stat.isFile() && /(^SKILL\.md$|\.md$)/.test(entry)) out.push(path);
   }
