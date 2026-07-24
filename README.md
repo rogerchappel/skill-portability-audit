@@ -20,7 +20,14 @@ skill-portability-audit --version
 
 ## Library
 
-Import from `src/index.js` for local automation and tests.
+Import `auditSkill` from `src/index.js` for local automation and tests. Pass either
+a skill directory or the path to a Markdown file:
+
+```js
+import { auditSkill } from './src/index.js';
+
+const report = auditSkill('fixtures/clean-skill/SKILL.md');
+```
 
 ## Safety Notes
 
@@ -28,7 +35,11 @@ This project is local-first and read-only. It prints plans or reports to stdout 
 
 ## Limitations
 
-The heuristics are intentionally conservative. Symbolic links are skipped so an audit cannot leave the requested skill tree or recurse through a link cycle. Review output before using it in an automated workflow.
+The heuristics are intentionally conservative. Approval words only satisfy the
+side-effect check when they state an affirmative requirement; wording such as
+“no approval is required” remains a warning. Symbolic links are skipped so a
+directory audit cannot leave the requested skill tree or recurse through a link
+cycle. Review output before using it in an automated workflow.
 
 ## Local Verification
 

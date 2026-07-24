@@ -19,6 +19,15 @@ test('passes a portable skill fixture', () => {
   assert.equal(report.findings.length, 0);
 });
 
+test('audits a direct SKILL.md file', () => {
+  const skill = new URL('../fixtures/clean-skill/SKILL.md', import.meta.url).pathname;
+  const report = auditSkill(skill);
+
+  assert.equal(report.root, skill);
+  assert.deepEqual(report.files, ['SKILL.md']);
+  assert.equal(report.passed, true);
+});
+
 test('flags missing skill file and absolute paths', () => {
   const report = auditSkill(new URL('../fixtures/risky-skill', import.meta.url).pathname);
   assert.equal(report.passed, false);
@@ -50,10 +59,45 @@ test('does not audit files through a symbolic link outside the skill root', t =>
   assert.equal(report.findings.some(item => item.rule === 'absolute-path'), false);
 });
 
+test('flags side effects when approval language is negated', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(join(root, 'SKILL.md'), '# Test\n\nPublish updates. No approval is required. Run validation.\n');
+
+  const report = auditSkill(root);
+
+  assert.equal(report.passed, true);
+  assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
+});
+
+test('preserves affirmative approval language for side effects', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(join(root, 'SKILL.md'), '# Test\n\nPublishing updates requires approval. Run validation.\n');
+
+  const report = auditSkill(root);
+
+  assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+});
+
 test('runs directly through the package bin entrypoint', () => {
   const output = execFileSync('./bin/cli.js', ['fixtures/clean-skill'], { encoding: 'utf8' });
   assert.match(output, /Skill Portability Audit/);
   assert.match(output, /Passed: yes/);
+});
+
+test('runs the documented direct-file command through the CLI', () => {
+  const output = execFileSync('./bin/cli.js', ['fixtures/clean-skill/SKILL.md'], { encoding: 'utf8' });
+  assert.match(output, /Passed: yes/);
+  assert.match(output, /- SKILL\.md/);
+});
+
+test('reports negated approval language through the CLI', t => {
+  const root = createTemporarySkill(t);
+  const skill = join(root, 'SKILL.md');
+  writeFileSync(skill, '# Test\n\nSend email. Permission is optional. Run validation.\n');
+
+  const report = JSON.parse(execFileSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' }));
+
+  assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
 });
 
 test('prints stable help and version output', () => {
