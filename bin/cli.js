@@ -7,7 +7,7 @@ const json = args.includes('--json');
 const root = args.find(arg => !arg.startsWith('--')) || process.cwd();
 
 if (args.includes('--help') || args.includes('-h')) {
-  process.stdout.write('Usage: skill-portability-audit [skill-dir] [--json]\n');
+  process.stdout.write('Usage: skill-portability-audit [skill-dir|markdown-file] [--json]\n');
   process.exit(0);
 }
 

@@ -19,6 +19,15 @@ test('passes a portable skill fixture', () => {
   assert.equal(report.findings.length, 0);
 });
 
+test('audits a direct SKILL.md file', () => {
+  const skill = new URL('../fixtures/clean-skill/SKILL.md', import.meta.url).pathname;
+  const report = auditSkill(skill);
+
+  assert.equal(report.root, skill);
+  assert.deepEqual(report.files, ['SKILL.md']);
+  assert.equal(report.passed, true);
+});
+
 test('flags missing skill file and absolute paths', () => {
   const report = auditSkill(new URL('../fixtures/risky-skill', import.meta.url).pathname);
   assert.equal(report.passed, false);
@@ -54,6 +63,12 @@ test('runs directly through the package bin entrypoint', () => {
   const output = execFileSync('./bin/cli.js', ['fixtures/clean-skill'], { encoding: 'utf8' });
   assert.match(output, /Skill Portability Audit/);
   assert.match(output, /Passed: yes/);
+});
+
+test('runs the documented direct-file command through the CLI', () => {
+  const output = execFileSync('./bin/cli.js', ['fixtures/clean-skill/SKILL.md'], { encoding: 'utf8' });
+  assert.match(output, /Passed: yes/);
+  assert.match(output, /- SKILL\.md/);
 });
 
 test('prints stable help and version output', () => {

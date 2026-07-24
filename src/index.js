@@ -1,5 +1,5 @@
 import { lstatSync, readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 
 function listMarkdown(root) {
   const out = [];
@@ -13,12 +13,14 @@ function listMarkdown(root) {
 }
 
 export function auditSkill(root) {
-  const base = resolve(root);
-  const files = listMarkdown(base);
+  const requestedPath = resolve(root);
+  const requestedStat = lstatSync(requestedPath);
+  const base = requestedStat.isFile() ? dirname(requestedPath) : requestedPath;
+  const files = requestedStat.isFile() ? [requestedPath] : listMarkdown(requestedPath);
   const findings = [];
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
-    const rel = file.slice(base.length + 1);
+    const rel = requestedStat.isFile() ? basename(file) : file.slice(base.length + 1);
     if (/\/Users\/|\/home\/|C:\\\\Users\\\\/.test(text)) findings.push({ level: 'error', file: rel, rule: 'absolute-path', message: 'Avoid machine-specific absolute paths.' });
     if (/\b(API_KEY|TOKEN|SECRET|PASSWORD)\b/.test(text)) findings.push({ level: 'warn', file: rel, rule: 'secret-env', message: 'Document env vars without exposing values.' });
     if (/\b(publish|deploy|send|delete|merge|charge|email)\b/i.test(text) && !/approval|permission|confirm/i.test(text)) findings.push({ level: 'warn', file: rel, rule: 'unclear-approval', message: 'External side effects need explicit approval language.' });
@@ -27,7 +29,12 @@ export function auditSkill(root) {
   if (!skill) findings.push({ level: 'error', file: '.', rule: 'missing-skill', message: 'Expected a SKILL.md file.' });
   const combined = files.map(file => readFileSync(file, 'utf8')).join('\n');
   if (!/verify|validation|test|smoke/i.test(combined)) findings.push({ level: 'warn', file: '.', rule: 'missing-verification', message: 'Add a validation or smoke workflow.' });
-  return { root: base, files: files.map(file => file.slice(base.length + 1)), findings, passed: findings.every(item => item.level !== 'error') };
+  return {
+    root: requestedPath,
+    files: files.map(file => requestedStat.isFile() ? basename(file) : file.slice(base.length + 1)),
+    findings,
+    passed: findings.every(item => item.level !== 'error')
+  };
 }
 
 export function renderMarkdown(report) {
