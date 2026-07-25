@@ -21,6 +21,19 @@ function hasAffirmativeApprovalLanguage(text) {
   ).test(text);
 }
 
+function findUnapprovedSideEffects(text) {
+  const statements = text.split(/(?<=[.!?])(?:[ \t]+|\r?\n+)|\r?\n+/);
+  const sideEffect = /\b(publish(?:es|ed|ing)?|deploy(?:s|ed|ing)?|send(?:s|ing)?|sent|delet(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|charg(?:e|es|ed|ing)|email(?:s|ed|ing)?)\b/gi;
+  const findings = [];
+
+  for (const statement of statements) {
+    if (hasAffirmativeApprovalLanguage(statement)) continue;
+    for (const match of statement.matchAll(sideEffect)) findings.push(match[0].toLowerCase());
+  }
+
+  return findings;
+}
+
 export function auditSkill(root) {
   const requestedPath = resolve(root);
   const requestedStat = lstatSync(requestedPath);
@@ -32,7 +45,9 @@ export function auditSkill(root) {
     const rel = requestedStat.isFile() ? basename(file) : file.slice(base.length + 1);
     if (/\/Users\/|\/home\/|C:\\\\Users\\\\/.test(text)) findings.push({ level: 'error', file: rel, rule: 'absolute-path', message: 'Avoid machine-specific absolute paths.' });
     if (/\b(API_KEY|TOKEN|SECRET|PASSWORD)\b/.test(text)) findings.push({ level: 'warn', file: rel, rule: 'secret-env', message: 'Document env vars without exposing values.' });
-    if (/\b(publish|deploy|send|delete|merge|charge|email)\b/i.test(text) && !hasAffirmativeApprovalLanguage(text)) findings.push({ level: 'warn', file: rel, rule: 'unclear-approval', message: 'External side effects need explicit approval language.' });
+    for (const action of findUnapprovedSideEffects(text)) {
+      findings.push({ level: 'warn', file: rel, rule: 'unclear-approval', message: `External side effect "${action}" needs explicit approval language in the same statement.` });
+    }
   }
   const skill = files.find(file => file.endsWith('SKILL.md'));
   if (!skill) findings.push({ level: 'error', file: '.', rule: 'missing-skill', message: 'Expected a SKILL.md file.' });

@@ -36,10 +36,14 @@ This project is local-first and read-only. It prints plans or reports to stdout 
 ## Limitations
 
 The heuristics are intentionally conservative. Approval words only satisfy the
-side-effect check when they state an affirmative requirement; wording such as
-“no approval is required” remains a warning. Symbolic links are skipped so a
-directory audit cannot leave the requested skill tree or recurse through a link
-cycle. Review output before using it in an automated workflow.
+side-effect check when they state an affirmative requirement in the same
+sentence or Markdown line as the action. Approval for one statement does not
+cover a separate publish, deploy, send, delete, merge, charge, or email
+statement, and wording such as “no approval is required” remains a warning.
+This statement boundary is a text heuristic rather than a full Markdown or
+natural-language parser. Symbolic links are skipped so a directory audit cannot
+leave the requested skill tree or recurse through a link cycle. Review output
+before using it in an automated workflow.
 
 ## Local Verification
 

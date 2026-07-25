@@ -78,6 +78,15 @@ test('preserves affirmative approval language for side effects', t => {
   assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
 });
 
+test('scopes approval language to each side-effect statement', () => {
+  const report = auditSkill(new URL('../fixtures/mixed-approval-skill', import.meta.url).pathname);
+  const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(approvalFindings.length, 1);
+  assert.match(approvalFindings[0].message, /delete/i);
+  assert.doesNotMatch(approvalFindings[0].message, /publish/i);
+});
+
 test('runs directly through the package bin entrypoint', () => {
   const output = execFileSync('./bin/cli.js', ['fixtures/clean-skill'], { encoding: 'utf8' });
   assert.match(output, /Skill Portability Audit/);
@@ -98,6 +107,19 @@ test('reports negated approval language through the CLI', t => {
   const report = JSON.parse(execFileSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' }));
 
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
+});
+
+test('reports only the unapproved action in a mixed-approval file through the CLI', () => {
+  const report = JSON.parse(execFileSync(
+    './bin/cli.js',
+    ['fixtures/mixed-approval-skill/SKILL.md', '--json'],
+    { encoding: 'utf8' }
+  ));
+  const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(approvalFindings.length, 1);
+  assert.match(approvalFindings[0].message, /delete/i);
+  assert.doesNotMatch(approvalFindings[0].message, /publish/i);
 });
 
 test('prints stable help and version output', () => {
