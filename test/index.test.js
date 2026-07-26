@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -34,6 +34,22 @@ test('flags missing skill file and absolute paths', () => {
   assert.ok(report.findings.some(item => item.rule === 'missing-skill'));
   assert.ok(report.findings.some(item => item.rule === 'absolute-path'));
 });
+
+for (const windowsPath of [
+  String.raw`C:\Users\alice\tools`,
+  String.raw`d:\users\bob\skill`,
+  'E:/Users/carol/project',
+]) {
+  test(`flags Windows absolute path: ${windowsPath}`, t => {
+    const root = createTemporarySkill(t);
+    writeFileSync(join(root, 'SKILL.md'), `# Test skill\n\nUse ${windowsPath}.\nRun validation.\n`);
+
+    const report = auditSkill(root);
+
+    assert.equal(report.passed, false);
+    assert.ok(report.findings.some(item => item.rule === 'absolute-path'));
+  });
+}
 
 test('ignores a self-referential symbolic link', t => {
   const root = createTemporarySkill(t);
@@ -107,6 +123,26 @@ test('reports negated approval language through the CLI', t => {
   const report = JSON.parse(execFileSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' }));
 
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
+});
+
+test('returns a failing CLI result for a Windows absolute path', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    String.raw`# Test skill
+
+Use C:\Users\alice\tools.
+Run validation.
+`
+  );
+
+  const result = spawnSync('./bin/cli.js', [root, '--json'], {
+    encoding: 'utf8',
+  });
+
+  assert.equal(result.status, 1);
+  const report = JSON.parse(result.stdout);
+  assert.ok(report.findings.some(item => item.rule === 'absolute-path'));
 });
 
 test('reports only the unapproved action in a mixed-approval file through the CLI', () => {
