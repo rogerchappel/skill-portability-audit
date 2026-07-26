@@ -20,13 +20,14 @@ skill-portability-audit --version
 
 ## Library
 
-Import `auditSkill` from `src/index.js` for local automation and tests. Pass either
-a skill directory or the path to a Markdown file:
+Import the public package API for automation. Pass either a skill directory or
+the path to a Markdown file:
 
 ```js
-import { auditSkill } from './src/index.js';
+import { auditSkill, renderMarkdown } from 'skill-portability-audit';
 
 const report = auditSkill('fixtures/clean-skill/SKILL.md');
+process.stdout.write(renderMarkdown(report));
 ```
 
 ## Safety Notes
