@@ -43,7 +43,7 @@ export function auditSkill(root) {
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const rel = requestedStat.isFile() ? basename(file) : file.slice(base.length + 1);
-    if (/\/Users\/|\/home\/|C:\\\\Users\\\\/.test(text)) findings.push({ level: 'error', file: rel, rule: 'absolute-path', message: 'Avoid machine-specific absolute paths.' });
+    if (/\/Users\/|\/home\/|[A-Z]:[\\/]+Users[\\/]/i.test(text)) findings.push({ level: 'error', file: rel, rule: 'absolute-path', message: 'Avoid machine-specific absolute paths.' });
     if (/\b(API_KEY|TOKEN|SECRET|PASSWORD)\b/.test(text)) findings.push({ level: 'warn', file: rel, rule: 'secret-env', message: 'Document env vars without exposing values.' });
     for (const action of findUnapprovedSideEffects(text)) {
       findings.push({ level: 'warn', file: rel, rule: 'unclear-approval', message: `External side effect "${action}" needs explicit approval language in the same statement.` });
