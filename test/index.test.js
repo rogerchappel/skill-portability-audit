@@ -94,6 +94,34 @@ test('preserves affirmative approval language for side effects', t => {
   assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
 });
 
+test('associates approval with each action in a contrastive statement', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    '# Test\n\nApproval is required before deleting files, but publish automatically. Run validation.\n'
+  );
+
+  const report = auditSkill(root);
+  const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(report.passed, false);
+  assert.equal(approvalFindings.length, 1);
+  assert.match(approvalFindings[0].message, /publish/i);
+  assert.doesNotMatch(approvalFindings[0].message, /delet/i);
+});
+
+test('allows one affirmative requirement to cover compound actions', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    '# Test\n\nDeleting files and publishing releases require explicit approval. Run validation.\n'
+  );
+
+  const report = auditSkill(root);
+
+  assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+});
+
 test('scopes approval language to each side-effect statement', () => {
   const report = auditSkill(new URL('../fixtures/mixed-approval-skill', import.meta.url).pathname);
   const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
