@@ -23,12 +23,15 @@ function hasAffirmativeApprovalLanguage(text) {
 
 function findUnapprovedSideEffects(text) {
   const statements = text.split(/(?<=[.!?])(?:[ \t]+|\r?\n+)|\r?\n+/);
+  const contrastiveBoundary = /\s*(?:[,;:]\s*)?\b(?:but|however|whereas|while)\b\s*/i;
   const sideEffect = /\b(publish(?:es|ed|ing)?|deploy(?:s|ed|ing)?|send(?:s|ing)?|sent|delet(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|charg(?:e|es|ed|ing)|email(?:s|ed|ing)?)\b/gi;
   const findings = [];
 
   for (const statement of statements) {
-    if (hasAffirmativeApprovalLanguage(statement)) continue;
-    for (const match of statement.matchAll(sideEffect)) findings.push(match[0].toLowerCase());
+    for (const clause of statement.split(contrastiveBoundary)) {
+      if (hasAffirmativeApprovalLanguage(clause)) continue;
+      for (const match of clause.matchAll(sideEffect)) findings.push(match[0].toLowerCase());
+    }
   }
 
   return findings;
@@ -46,7 +49,7 @@ export function auditSkill(root) {
     if (/\/Users\/|\/home\/|[A-Z]:[\\/]+Users[\\/]/i.test(text)) findings.push({ level: 'error', file: rel, rule: 'absolute-path', message: 'Avoid machine-specific absolute paths.' });
     if (/\b(API_KEY|TOKEN|SECRET|PASSWORD)\b/.test(text)) findings.push({ level: 'warn', file: rel, rule: 'secret-env', message: 'Document env vars without exposing values.' });
     for (const action of findUnapprovedSideEffects(text)) {
-      findings.push({ level: 'warn', file: rel, rule: 'unclear-approval', message: `External side effect "${action}" needs explicit approval language in the same statement.` });
+      findings.push({ level: 'error', file: rel, rule: 'unclear-approval', message: `External side effect "${action}" needs explicit approval language in the same clause.` });
     }
   }
   const skill = files.find(file => file.endsWith('SKILL.md'));

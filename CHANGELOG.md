@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Associate approval requirements with each side-effect action across
+  contrastive clauses, and fail audits when an action lacks approval.
+- Reject unknown CLI options and extra target arguments with stable usage
+  output.
 - Expose `auditSkill` and `renderMarkdown` through the installed package entry
   point.
 - Detect conventional Windows user paths written with backslashes or forward

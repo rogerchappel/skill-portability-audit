@@ -81,6 +81,16 @@ try {
     process.exit(1);
   }
 
+  const invalid = spawnSync(
+    join(root, 'node_modules/.bin/skill-portability-audit'),
+    ['fixtures/clean-skill', '--bogus'],
+    { cwd: root, encoding: 'utf8' }
+  );
+  if (invalid.status !== 2 || !invalid.stderr.includes('Unknown option: --bogus')) {
+    console.error('package smoke failed; installed CLI accepted an unknown option');
+    process.exit(1);
+  }
+
   console.log(`package smoke passed; installed package exposes library API and CLI (${requiredFiles.length} required files)`);
 } finally {
   rmSync(root, { recursive: true, force: true });

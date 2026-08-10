@@ -81,13 +81,41 @@ test('flags side effects when approval language is negated', t => {
 
   const report = auditSkill(root);
 
-  assert.equal(report.passed, true);
+  assert.equal(report.passed, false);
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
 });
 
 test('preserves affirmative approval language for side effects', t => {
   const root = createTemporarySkill(t);
   writeFileSync(join(root, 'SKILL.md'), '# Test\n\nPublishing updates requires approval. Run validation.\n');
+
+  const report = auditSkill(root);
+
+  assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+});
+
+test('associates approval with each action in a contrastive statement', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    '# Test\n\nApproval is required before deleting files, but publish automatically. Run validation.\n'
+  );
+
+  const report = auditSkill(root);
+  const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(report.passed, false);
+  assert.equal(approvalFindings.length, 1);
+  assert.match(approvalFindings[0].message, /publish/i);
+  assert.doesNotMatch(approvalFindings[0].message, /delet/i);
+});
+
+test('allows one affirmative requirement to cover compound actions', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    '# Test\n\nDeleting files and publishing releases require explicit approval. Run validation.\n'
+  );
 
   const report = auditSkill(root);
 
@@ -120,8 +148,10 @@ test('reports negated approval language through the CLI', t => {
   const skill = join(root, 'SKILL.md');
   writeFileSync(skill, '# Test\n\nSend email. Permission is optional. Run validation.\n');
 
-  const report = JSON.parse(execFileSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' }));
+  const result = spawnSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' });
+  const report = JSON.parse(result.stdout);
 
+  assert.equal(result.status, 1);
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
 });
 
@@ -146,13 +176,15 @@ Run validation.
 });
 
 test('reports only the unapproved action in a mixed-approval file through the CLI', () => {
-  const report = JSON.parse(execFileSync(
+  const result = spawnSync(
     './bin/cli.js',
     ['fixtures/mixed-approval-skill/SKILL.md', '--json'],
     { encoding: 'utf8' }
-  ));
+  );
+  const report = JSON.parse(result.stdout);
   const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
 
+  assert.equal(result.status, 1);
   assert.equal(approvalFindings.length, 1);
   assert.match(approvalFindings[0].message, /delete/i);
   assert.doesNotMatch(approvalFindings[0].message, /publish/i);
@@ -165,3 +197,19 @@ test('prints stable help and version output', () => {
   assert.match(help, /Usage: skill-portability-audit/);
   assert.equal(version, packageJson.version);
 });
+
+for (const { name, args, message } of [
+  { name: 'unknown options', args: ['fixtures/clean-skill', '--bogus'], message: 'Unknown option: --bogus' },
+  { name: 'extra targets', args: ['fixtures/clean-skill', 'fixtures/risky-skill'], message: 'Expected at most one skill target.' },
+]) {
+  test(`rejects ${name} with stable usage output`, () => {
+    const result = spawnSync('./bin/cli.js', args, { encoding: 'utf8' });
+
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, '');
+    assert.equal(
+      result.stderr,
+      `Error: ${message}\nUsage: skill-portability-audit [skill-dir|markdown-file] [--json]\n`
+    );
+  });
+}
