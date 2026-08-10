@@ -81,7 +81,7 @@ test('flags side effects when approval language is negated', t => {
 
   const report = auditSkill(root);
 
-  assert.equal(report.passed, true);
+  assert.equal(report.passed, false);
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
 });
 
@@ -148,8 +148,10 @@ test('reports negated approval language through the CLI', t => {
   const skill = join(root, 'SKILL.md');
   writeFileSync(skill, '# Test\n\nSend email. Permission is optional. Run validation.\n');
 
-  const report = JSON.parse(execFileSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' }));
+  const result = spawnSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' });
+  const report = JSON.parse(result.stdout);
 
+  assert.equal(result.status, 1);
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
 });
 
@@ -174,13 +176,15 @@ Run validation.
 });
 
 test('reports only the unapproved action in a mixed-approval file through the CLI', () => {
-  const report = JSON.parse(execFileSync(
+  const result = spawnSync(
     './bin/cli.js',
     ['fixtures/mixed-approval-skill/SKILL.md', '--json'],
     { encoding: 'utf8' }
-  ));
+  );
+  const report = JSON.parse(result.stdout);
   const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
 
+  assert.equal(result.status, 1);
   assert.equal(approvalFindings.length, 1);
   assert.match(approvalFindings[0].message, /delete/i);
   assert.doesNotMatch(approvalFindings[0].message, /publish/i);
