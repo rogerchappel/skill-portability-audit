@@ -197,3 +197,19 @@ test('prints stable help and version output', () => {
   assert.match(help, /Usage: skill-portability-audit/);
   assert.equal(version, packageJson.version);
 });
+
+for (const { name, args, message } of [
+  { name: 'unknown options', args: ['fixtures/clean-skill', '--bogus'], message: 'Unknown option: --bogus' },
+  { name: 'extra targets', args: ['fixtures/clean-skill', 'fixtures/risky-skill'], message: 'Expected at most one skill target.' },
+]) {
+  test(`rejects ${name} with stable usage output`, () => {
+    const result = spawnSync('./bin/cli.js', args, { encoding: 'utf8' });
+
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, '');
+    assert.equal(
+      result.stderr,
+      `Error: ${message}\nUsage: skill-portability-audit [skill-dir|markdown-file] [--json]\n`
+    );
+  });
+}
