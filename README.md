@@ -18,6 +18,9 @@ skill-portability-audit --help
 skill-portability-audit --version
 ```
 
+The CLI accepts one target and the documented options only. Invalid options or
+extra targets print an error plus usage to stderr and exit with status 2.
+
 ## Library
 
 Import the public package API for automation. Pass either a skill directory or
@@ -37,14 +40,16 @@ This project is local-first and read-only. It prints plans or reports to stdout 
 ## Limitations
 
 The heuristics are intentionally conservative. Approval words only satisfy the
-side-effect check when they state an affirmative requirement in the same
-sentence or Markdown line as the action. Approval for one statement does not
-cover a separate publish, deploy, send, delete, merge, charge, or email
-statement, and wording such as “no approval is required” remains a warning.
-This statement boundary is a text heuristic rather than a full Markdown or
-natural-language parser. Symbolic links are skipped so a directory audit cannot
-leave the requested skill tree or recurse through a link cycle. Review output
-before using it in an automated workflow.
+side-effect check when they state an affirmative requirement in the same clause
+as the action. One affirmative requirement can cover compound actions, but
+approval for an action before “but,” “however,” “whereas,” or “while” does not
+cover actions after that contrastive boundary. Separate publish, deploy, send,
+delete, merge, charge, or email statements and wording such as “no approval is
+required” fail the audit. These statement and clause boundaries are text
+heuristics rather than a full Markdown or natural-language parser. Symbolic
+links are skipped so a directory audit cannot leave the requested skill tree or
+recurse through a link cycle. Review output before using it in an automated
+workflow.
 
 ## Local Verification
 
