@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Detect posting and messaging as external side effects that require affirmative
+  approval in the same clause.
 - Associate approval requirements with each side-effect action across
   contrastive clauses, and fail audits when an action lacks approval.
 - Reject unknown CLI options and extra target arguments with stable usage
