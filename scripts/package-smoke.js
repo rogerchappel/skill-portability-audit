@@ -92,10 +92,10 @@ try {
   }
 
   const installedCli = join(root, 'node_modules/.bin/skill-portability-audit');
-  writeFileSync(join(root, 'unapproved-skill.md'), '# Test\n\nPost a message to the project channel. Run validation.\n');
-  writeFileSync(join(root, 'approved-skill.md'), '# Test\n\nPosting and messaging require explicit approval. Run validation.\n');
+  writeFileSync(join(root, 'unapproved-SKILL.md'), '# Test\n\nPost a message to the project channel. Run validation.\n');
+  writeFileSync(join(root, 'approved-SKILL.md'), '# Test\n\nPosting and messaging require explicit approval. Run validation.\n');
 
-  const unapproved = spawnSync(installedCli, [join(root, 'unapproved-skill.md'), '--json'], {
+  const unapproved = spawnSync(installedCli, [join(root, 'unapproved-SKILL.md'), '--json'], {
     cwd: root,
     encoding: 'utf8',
   });
@@ -105,7 +105,7 @@ try {
     process.exit(1);
   }
 
-  const approved = spawnSync(installedCli, [join(root, 'approved-skill.md'), '--json'], {
+  const approved = spawnSync(installedCli, [join(root, 'approved-SKILL.md'), '--json'], {
     cwd: root,
     encoding: 'utf8',
   });
