@@ -35,7 +35,7 @@ process.stdout.write(renderMarkdown(report));
 
 ## Safety Notes
 
-This project is local-first and read-only. It prints plans or reports to stdout and does not call external services. Treat any generated mention of publishing, deploying, messaging, deleting, or merging as requiring separate approval.
+This project is local-first and read-only. It prints plans or reports to stdout and does not call external services. Treat any generated mention of publishing, posting, deploying, sending, messaging, deleting, merging, charging, or emailing as requiring separate approval.
 
 ## Limitations
 
@@ -43,9 +43,9 @@ The heuristics are intentionally conservative. Approval words only satisfy the
 side-effect check when they state an affirmative requirement in the same clause
 as the action. One affirmative requirement can cover compound actions, but
 approval for an action before “but,” “however,” “whereas,” or “while” does not
-cover actions after that contrastive boundary. Separate publish, deploy, send,
-delete, merge, charge, or email statements and wording such as “no approval is
-required” fail the audit. These statement and clause boundaries are text
+cover actions after that contrastive boundary. Separate publish, post, deploy,
+send, message, delete, merge, charge, or email statements and wording such as
+“no approval is required” fail the audit. These statement and clause boundaries are text
 heuristics rather than a full Markdown or natural-language parser. Symbolic
 links are skipped so a directory audit cannot leave the requested skill tree or
 recurse through a link cycle. Review output before using it in an automated
