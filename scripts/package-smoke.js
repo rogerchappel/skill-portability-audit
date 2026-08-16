@@ -91,6 +91,30 @@ try {
     process.exit(1);
   }
 
+  const installedCli = join(root, 'node_modules/.bin/skill-portability-audit');
+  writeFileSync(join(root, 'unapproved-skill.md'), '# Test\n\nPost a message to the project channel. Run validation.\n');
+  writeFileSync(join(root, 'approved-skill.md'), '# Test\n\nPosting and messaging require explicit approval. Run validation.\n');
+
+  const unapproved = spawnSync(installedCli, [join(root, 'unapproved-skill.md'), '--json'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  const unapprovedReport = JSON.parse(unapproved.stdout);
+  if (unapproved.status !== 1 || !unapprovedReport.findings.some(item => item.rule === 'unclear-approval')) {
+    console.error('package smoke failed; installed CLI accepted unapproved posting and messaging');
+    process.exit(1);
+  }
+
+  const approved = spawnSync(installedCli, [join(root, 'approved-skill.md'), '--json'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  const approvedReport = JSON.parse(approved.stdout);
+  if (approved.status !== 0 || approvedReport.findings.some(item => item.rule === 'unclear-approval')) {
+    console.error('package smoke failed; installed CLI rejected same-clause approval');
+    process.exit(1);
+  }
+
   console.log(`package smoke passed; installed package exposes library API and CLI (${requiredFiles.length} required files)`);
 } finally {
   rmSync(root, { recursive: true, force: true });

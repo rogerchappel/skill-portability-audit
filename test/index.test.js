@@ -94,6 +94,32 @@ test('preserves affirmative approval language for side effects', t => {
   assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
 });
 
+for (const action of ['Post an update', 'Posting an update', 'Message the project channel', 'Messaging the project channel']) {
+  test(`flags unapproved live action: ${action}`, t => {
+    const root = createTemporarySkill(t);
+    writeFileSync(join(root, 'SKILL.md'), `# Test\n\n${action}. Run validation.\n`);
+
+    const report = auditSkill(root);
+    const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+    assert.equal(report.passed, false);
+    assert.equal(approvalFindings.length, 1);
+    assert.match(approvalFindings[0].message, new RegExp(action.split(' ')[0], 'i'));
+  });
+}
+
+test('allows approved posting and messaging in the same clause', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    '# Test\n\nPosting updates and messaging the project channel require explicit approval. Run validation.\n'
+  );
+
+  const report = auditSkill(root);
+
+  assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+});
+
 test('associates approval with each action in a contrastive statement', t => {
   const root = createTemporarySkill(t);
   writeFileSync(
