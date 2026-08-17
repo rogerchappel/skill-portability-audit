@@ -94,6 +94,10 @@ try {
   const installedCli = join(root, 'node_modules/.bin/skill-portability-audit');
   writeFileSync(join(root, 'unapproved-SKILL.md'), '# Test\n\nPost a message to the project channel. Run validation.\n');
   writeFileSync(join(root, 'approved-SKILL.md'), '# Test\n\nPosting and messaging require explicit approval. Run validation.\n');
+  writeFileSync(
+    join(root, 'mixed-approval-SKILL.md'),
+    '# Test\n\nApproval is required before deleting files; publish automatically. Run validation.\n'
+  );
 
   const unapproved = spawnSync(installedCli, [join(root, 'unapproved-SKILL.md'), '--json'], {
     cwd: root,
@@ -112,6 +116,22 @@ try {
   const approvedReport = JSON.parse(approved.stdout);
   if (approved.status !== 0 || approvedReport.findings.some(item => item.rule === 'unclear-approval')) {
     console.error('package smoke failed; installed CLI rejected same-clause approval');
+    process.exit(1);
+  }
+
+  const mixedApproval = spawnSync(installedCli, [join(root, 'mixed-approval-SKILL.md'), '--json'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  const mixedApprovalReport = JSON.parse(mixedApproval.stdout);
+  const mixedApprovalFindings = mixedApprovalReport.findings.filter(item => item.rule === 'unclear-approval');
+  if (
+    mixedApproval.status !== 1 ||
+    mixedApprovalFindings.length !== 1 ||
+    !/publish/i.test(mixedApprovalFindings[0].message) ||
+    /delet/i.test(mixedApprovalFindings[0].message)
+  ) {
+    console.error('package smoke failed; installed CLI crossed a semicolon approval boundary');
     process.exit(1);
   }
 
