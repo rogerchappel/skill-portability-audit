@@ -22,7 +22,7 @@ function hasAffirmativeApprovalLanguage(text) {
 }
 
 function findUnapprovedSideEffects(text) {
-  const statements = text.split(/(?<=[.!?])(?:[ \t]+|\r?\n+)|\r?\n+/);
+  const statements = text.split(/(?<=[.!?])(?:[ \t]+|\r?\n+)|\r?\n+|\s*;\s*/);
   const contrastiveBoundary = /\s*(?:[,;:]\s*)?\b(?:but|however|whereas|while)\b\s*/i;
   const sideEffect = /\b(publish(?:es|ed|ing)?|post(?:s|ed|ing)?|deploy(?:s|ed|ing)?|send(?:s|ing)?|sent|messag(?:e|es|ed|ing)|delet(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|charg(?:e|es|ed|ing)|email(?:s|ed|ing)?)\b/gi;
   const findings = [];
