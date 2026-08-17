@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Treat semicolons as approval-scope boundaries so approval for an earlier
+  action cannot implicitly authorize a later action.
 - Detect posting and messaging as external side effects that require affirmative
   approval in the same clause.
 - Associate approval requirements with each side-effect action across

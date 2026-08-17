@@ -136,6 +136,22 @@ test('associates approval with each action in a contrastive statement', t => {
   assert.doesNotMatch(approvalFindings[0].message, /delet/i);
 });
 
+test('treats a semicolon as an approval-scope boundary', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    '# Test\n\nApproval is required before deleting files; publish automatically. Run validation.\n'
+  );
+
+  const report = auditSkill(root);
+  const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(report.passed, false);
+  assert.equal(approvalFindings.length, 1);
+  assert.match(approvalFindings[0].message, /publish/i);
+  assert.doesNotMatch(approvalFindings[0].message, /delet/i);
+});
+
 test('allows one affirmative requirement to cover compound actions', t => {
   const root = createTemporarySkill(t);
   writeFileSync(
@@ -214,6 +230,24 @@ test('reports only the unapproved action in a mixed-approval file through the CL
   assert.equal(approvalFindings.length, 1);
   assert.match(approvalFindings[0].message, /delete/i);
   assert.doesNotMatch(approvalFindings[0].message, /publish/i);
+});
+
+test('reports semicolon-separated mixed approval through the CLI', t => {
+  const root = createTemporarySkill(t);
+  const skill = join(root, 'SKILL.md');
+  writeFileSync(
+    skill,
+    '# Test\n\nApproval is required before deleting files; publish automatically. Run validation.\n'
+  );
+
+  const result = spawnSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' });
+  const report = JSON.parse(result.stdout);
+  const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(result.status, 1);
+  assert.equal(approvalFindings.length, 1);
+  assert.match(approvalFindings[0].message, /publish/i);
+  assert.doesNotMatch(approvalFindings[0].message, /delet/i);
 });
 
 test('prints stable help and version output', () => {
