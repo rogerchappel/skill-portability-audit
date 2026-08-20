@@ -152,6 +152,24 @@ test('treats a semicolon as an approval-scope boundary', t => {
   assert.doesNotMatch(approvalFindings[0].message, /delet/i);
 });
 
+for (const transition of ['then', 'next', 'afterwards', 'subsequently', 'finally']) {
+  test(`treats comma-${transition} as an approval-scope boundary`, t => {
+    const root = createTemporarySkill(t);
+    writeFileSync(
+      join(root, 'SKILL.md'),
+      `# Test\n\nApproval is required before deleting files, ${transition} publish automatically. Run validation.\n`
+    );
+
+    const report = auditSkill(root);
+    const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+    assert.equal(report.passed, false);
+    assert.equal(approvalFindings.length, 1);
+    assert.match(approvalFindings[0].message, /publish/i);
+    assert.doesNotMatch(approvalFindings[0].message, /delet/i);
+  });
+}
+
 test('allows one affirmative requirement to cover compound actions', t => {
   const root = createTemporarySkill(t);
   writeFileSync(
@@ -163,6 +181,20 @@ test('allows one affirmative requirement to cover compound actions', t => {
 
   assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
 });
+
+for (const coordinator of ['and', 'or']) {
+  test(`preserves explicitly coordinated actions joined by ${coordinator}`, t => {
+    const root = createTemporarySkill(t);
+    writeFileSync(
+      join(root, 'SKILL.md'),
+      `# Test\n\nDeleting files ${coordinator} publishing releases requires explicit approval. Run validation.\n`
+    );
+
+    const report = auditSkill(root);
+
+    assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+  });
+}
 
 test('scopes approval language to each side-effect statement', () => {
   const report = auditSkill(new URL('../fixtures/mixed-approval-skill', import.meta.url).pathname);
@@ -195,6 +227,20 @@ test('reports negated approval language through the CLI', t => {
 
   assert.equal(result.status, 1);
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
+});
+
+test('reports a sequential unapproved action through the CLI', t => {
+  const root = createTemporarySkill(t);
+  const skill = join(root, 'SKILL.md');
+  writeFileSync(skill, '# Test\n\nApproval is required before deleting files, then publish automatically. Run validation.\n');
+
+  const result = spawnSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' });
+  const report = JSON.parse(result.stdout);
+  const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(result.status, 1);
+  assert.equal(approvalFindings.length, 1);
+  assert.match(approvalFindings[0].message, /publish/i);
 });
 
 test('returns a failing CLI result for a Windows absolute path', t => {
