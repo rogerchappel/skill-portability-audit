@@ -44,7 +44,10 @@ side-effect check when they state an affirmative requirement in the same clause
 as the action. One affirmative requirement can cover compound actions, but
 approval for an action before “but,” “however,” “whereas,” or “while” does not
 cover actions after that contrastive boundary. A semicolon also starts a new
-approval scope, so approval before it does not cover actions after it. Separate publish, post, deploy,
+approval scope, so approval before it does not cover actions after it. Comma-separated
+sequential transitions (“then,” “next,” “afterwards,” “subsequently,” and “finally”)
+also start a new scope, while explicitly coordinated actions joined by “and” or “or”
+remain in one scope. Separate publish, post, deploy,
 send, message, delete, merge, charge, or email statements and wording such as
 “no approval is required” fail the audit. These statement and clause boundaries are text
 heuristics rather than a full Markdown or natural-language parser. Symbolic
