@@ -109,7 +109,12 @@ test('does not treat negated approval as a side-effect prohibition', t => {
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
 });
 
-for (const posixPath of ['/opt/acme-private/tool', '/var/acme-private/config', '/etc/acme-private/settings.json']) {
+const hostLocalRoots = ['/opt', '/var', '/etc', '/srv', '/private', '/tmp', '/Applications', '/Volumes'];
+
+for (const posixPath of hostLocalRoots.flatMap(root => [
+  `${root}/project`,
+  `${root}/project/config.json`,
+])) {
   test(`flags machine-specific POSIX path: ${posixPath}`, t => {
     const root = createTemporarySkill(t);
     writeFileSync(join(root, 'SKILL.md'), `# Test skill\n\nRead ${posixPath}.\nRun validation.\n`);
@@ -120,11 +125,24 @@ for (const posixPath of ['/opt/acme-private/tool', '/var/acme-private/config', '
   });
 }
 
+for (const posixPath of ['/tmp/project', '/Volumes/workspace/project']) {
+  test(`reports a host-local POSIX path through the CLI: ${posixPath}`, t => {
+    const root = createTemporarySkill(t);
+    writeFileSync(join(root, 'SKILL.md'), `# Test skill\n\nRead ${posixPath}.\nRun validation.\n`);
+
+    const result = spawnSync('./bin/cli.js', [root, '--json'], { encoding: 'utf8' });
+    const report = JSON.parse(result.stdout);
+
+    assert.equal(result.status, 1);
+    assert.ok(report.findings.some(item => item.rule === 'absolute-path'));
+  });
+}
+
 test('ignores absolute-looking paths in URLs and code examples', t => {
   const root = createTemporarySkill(t);
   writeFileSync(
     join(root, 'SKILL.md'),
-    '# Test skill\n\nSee https://example.com/var/acme/config.\n\n`/opt/example/tool` is a placeholder.\n\n```sh\ncat /etc/example/config\n```\n\nRun validation.\n'
+    '# Test skill\n\nSee https://example.com/tmp/project.\n\n`/opt/example` is a placeholder.\n\n```sh\ncat /etc/example/config\n```\n\n~~~text\n/private/workspace\n~~~\n\nRun validation.\n'
   );
 
   const report = auditSkill(root);
