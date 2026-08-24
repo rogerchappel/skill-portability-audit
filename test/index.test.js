@@ -85,6 +85,53 @@ test('flags side effects when approval language is negated', t => {
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
 });
 
+for (const prohibition of [
+  'This tool does not publish packages or send messages.',
+  'Never delete files or deploy releases.',
+  'The workflow must not email users.',
+]) {
+  test(`allows an explicit side-effect prohibition: ${prohibition}`, t => {
+    const root = createTemporarySkill(t);
+    writeFileSync(join(root, 'SKILL.md'), `# Test\n\n${prohibition} Run validation.\n`);
+
+    const report = auditSkill(root);
+
+    assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+  });
+}
+
+test('does not treat negated approval as a side-effect prohibition', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(join(root, 'SKILL.md'), '# Test\n\nPublishing does not require approval. Run validation.\n');
+
+  const report = auditSkill(root);
+
+  assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
+});
+
+for (const posixPath of ['/opt/acme-private/tool', '/var/acme-private/config', '/etc/acme-private/settings.json']) {
+  test(`flags machine-specific POSIX path: ${posixPath}`, t => {
+    const root = createTemporarySkill(t);
+    writeFileSync(join(root, 'SKILL.md'), `# Test skill\n\nRead ${posixPath}.\nRun validation.\n`);
+
+    const report = auditSkill(root);
+
+    assert.ok(report.findings.some(item => item.rule === 'absolute-path'));
+  });
+}
+
+test('ignores absolute-looking paths in URLs and code examples', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    '# Test skill\n\nSee https://example.com/var/acme/config.\n\n`/opt/example/tool` is a placeholder.\n\n```sh\ncat /etc/example/config\n```\n\nRun validation.\n'
+  );
+
+  const report = auditSkill(root);
+
+  assert.equal(report.findings.some(item => item.rule === 'absolute-path'), false);
+});
+
 test('preserves affirmative approval language for side effects', t => {
   const root = createTemporarySkill(t);
   writeFileSync(join(root, 'SKILL.md'), '# Test\n\nPublishing updates requires approval. Run validation.\n');
@@ -319,3 +366,13 @@ for (const { name, args, message } of [
     );
   });
 }
+
+test('reports a nonexistent target without a stack trace', () => {
+  const target = '/tmp/skill-portability-audit-definitely-missing/SKILL.md';
+  const result = spawnSync('./bin/cli.js', [target], { encoding: 'utf8' });
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, `Error: Cannot audit target "${target}": target does not exist.\n`);
+  assert.doesNotMatch(result.stderr, /\n\s+at |node:fs|ENOENT/);
+});
