@@ -57,8 +57,9 @@ heuristics rather than a full Markdown or natural-language parser. Explicit
 prohibitions such as “does not publish” and “must not send” are not actionable
 side effects. Machine-specific home-directory paths and host-local POSIX paths
 under `/opt`, `/var`, `/etc`, `/srv`, `/private`, `/tmp`, `/Applications`, or
-`/Volumes` fail the audit when they appear in prose; URL and inline/fenced-code
-content is excluded from that check. Symbolic
+`/Volumes` fail the audit when they include one or more path components in prose.
+For example, both `/tmp/project` and `/var/project/config.json` are findings.
+URL and inline/fenced-code content is excluded from that check. Symbolic
 links are skipped so a directory audit cannot leave the requested skill tree or
 recurse through a link cycle. Review output before using it in an automated
 workflow.
