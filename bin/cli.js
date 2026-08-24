@@ -30,6 +30,19 @@ if (args.includes('--version')) {
   process.exit(0);
 }
 
-const report = auditSkill(root);
+let report;
+try {
+  report = auditSkill(root);
+} catch (error) {
+  const reasons = {
+    EACCES: 'target is not readable.',
+    ENOENT: 'target does not exist.',
+    ENOTDIR: 'a path component is not a directory.',
+    EPERM: 'permission was denied.',
+  };
+  if (!error || !reasons[error.code]) throw error;
+  process.stderr.write(`Error: Cannot audit target "${root}": ${reasons[error.code]}\n`);
+  process.exit(2);
+}
 process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : renderMarkdown(report));
 process.exitCode = report.passed ? 0 : 1;
