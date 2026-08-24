@@ -40,7 +40,7 @@ function proseWithoutCodeOrUrls(text) {
 function hasMachineSpecificAbsolutePath(text) {
   const prose = proseWithoutCodeOrUrls(text);
   const homeOrWindowsUserPath = /\/Users\/|\/home\/|[A-Z]:[\\/]+Users[\\/]/i;
-  const hostSpecificPosixPath = /(^|[\s(\[{'"])(?:\/(?:opt|var|etc|srv|private|tmp|Applications|Volumes)\/[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)+)/m;
+  const hostSpecificPosixPath = /(^|[\s(\[{'"])(?:\/(?:opt|var|etc|srv|private|tmp|Applications|Volumes)\/[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*)/m;
   return homeOrWindowsUserPath.test(prose) || hostSpecificPosixPath.test(prose);
 }
 
