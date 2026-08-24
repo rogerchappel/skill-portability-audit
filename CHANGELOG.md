@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Distinguish explicit side-effect prohibitions from actionable operations while
+  retaining affirmative same-clause approval enforcement.
+- Detect host-local POSIX paths in prose without flagging URL or code examples.
+- Report inaccessible CLI targets concisely with documented input-error status.
 - Treat semicolons as approval-scope boundaries so approval for an earlier
   action cannot implicitly authorize a later action.
 - Detect posting and messaging as external side effects that require affirmative

@@ -20,6 +20,9 @@ skill-portability-audit --version
 
 The CLI accepts one target and the documented options only. Invalid options or
 extra targets print an error plus usage to stderr and exit with status 2.
+Missing, unreadable, or otherwise inaccessible targets print a concise error
+without a stack trace and also exit with status 2. Audit findings exit with
+status 1; a passing audit exits with status 0.
 
 ## Library
 
@@ -50,7 +53,12 @@ also start a new scope, while explicitly coordinated actions joined by “and”
 remain in one scope. Separate publish, post, deploy,
 send, message, delete, merge, charge, or email statements and wording such as
 “no approval is required” fail the audit. These statement and clause boundaries are text
-heuristics rather than a full Markdown or natural-language parser. Symbolic
+heuristics rather than a full Markdown or natural-language parser. Explicit
+prohibitions such as “does not publish” and “must not send” are not actionable
+side effects. Machine-specific home-directory paths and host-local POSIX paths
+under `/opt`, `/var`, `/etc`, `/srv`, `/private`, `/tmp`, `/Applications`, or
+`/Volumes` fail the audit when they appear in prose; URL and inline/fenced-code
+content is excluded from that check. Symbolic
 links are skipped so a directory audit cannot leave the requested skill tree or
 recurse through a link cycle. Review output before using it in an automated
 workflow.
