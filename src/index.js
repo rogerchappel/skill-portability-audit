@@ -13,12 +13,35 @@ function listMarkdown(root) {
 }
 
 function hasAffirmativeApprovalLanguage(text) {
+  if (/(?:\b(?:do(?:es)?|did|is|was|are|were|will|would|should|must|may|might|can|could)\s+not\b|\bno\b)[^.?!;]*\b(?:approval|permission|confirmation)\b/i.test(text)) return false;
   const approval = String.raw`(?:approval|permission|confirmation)`;
   const qualifier = String.raw`(?:explicit\s+|prior\s+|user\s+)*`;
   return new RegExp(
     String.raw`(?:\b(?:require[sd]?|requiring|obtain|request|receive|get|ask\s+for)\s+${qualifier}${approval}\b|(?<!\bno\s)\b${approval}\s+(?:is\s+|must\s+be\s+)?(?:required|needed|obtained|requested|confirmed)\b|\b(?:with|after|pending)\s+${qualifier}${approval}\b)`,
     'i'
   ).test(text);
+}
+
+function isExplicitlyProhibited(clause, actionIndex) {
+  const prefix = clause.slice(0, actionIndex);
+  const negations = [...prefix.matchAll(/\b(?:never|(?:do(?:es)?|did|will|would|shall|should|must|may|might|can|could)\s+not)\b/gi)];
+  const negation = negations.at(-1);
+  if (!negation) return false;
+  return !/\b(?:approval|permission|confirmation)\b/i.test(prefix.slice(negation.index));
+}
+
+function proseWithoutCodeOrUrls(text) {
+  return text
+    .replace(/(^|\n)[ \t]*(```|~~~)[^\n]*\n[\s\S]*?\n[ \t]*\2(?=\n|$)/g, '$1')
+    .replace(/`[^`\n]*`/g, '')
+    .replace(/\b(?:https?|file):\/\/\S+/gi, '');
+}
+
+function hasMachineSpecificAbsolutePath(text) {
+  const prose = proseWithoutCodeOrUrls(text);
+  const homeOrWindowsUserPath = /\/Users\/|\/home\/|[A-Z]:[\\/]+Users[\\/]/i;
+  const hostSpecificPosixPath = /(^|[\s(\[{'"])(?:\/(?:opt|var|etc|srv|private|tmp|Applications|Volumes)\/[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)+)/m;
+  return homeOrWindowsUserPath.test(prose) || hostSpecificPosixPath.test(prose);
 }
 
 function findUnapprovedSideEffects(text) {
@@ -31,7 +54,9 @@ function findUnapprovedSideEffects(text) {
   for (const statement of statements) {
     for (const clause of statement.split(contrastiveBoundary).flatMap(part => part.split(sequentialBoundary))) {
       if (hasAffirmativeApprovalLanguage(clause)) continue;
-      for (const match of clause.matchAll(sideEffect)) findings.push(match[0].toLowerCase());
+      for (const match of clause.matchAll(sideEffect)) {
+        if (!isExplicitlyProhibited(clause, match.index)) findings.push(match[0].toLowerCase());
+      }
     }
   }
 
@@ -47,7 +72,7 @@ export function auditSkill(root) {
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const rel = requestedStat.isFile() ? basename(file) : file.slice(base.length + 1);
-    if (/\/Users\/|\/home\/|[A-Z]:[\\/]+Users[\\/]/i.test(text)) findings.push({ level: 'error', file: rel, rule: 'absolute-path', message: 'Avoid machine-specific absolute paths.' });
+    if (hasMachineSpecificAbsolutePath(text)) findings.push({ level: 'error', file: rel, rule: 'absolute-path', message: 'Avoid machine-specific absolute paths.' });
     if (/\b(API_KEY|TOKEN|SECRET|PASSWORD)\b/.test(text)) findings.push({ level: 'warn', file: rel, rule: 'secret-env', message: 'Document env vars without exposing values.' });
     for (const action of findUnapprovedSideEffects(text)) {
       findings.push({ level: 'error', file: rel, rule: 'unclear-approval', message: `External side effect "${action}" needs explicit approval language in the same clause.` });
