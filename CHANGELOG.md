@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Recognize remove and overwrite verb forms as approval-sensitive destructive actions.
+
 - Distinguish explicit side-effect prohibitions from actionable operations while
   retaining affirmative same-clause approval enforcement.
 - Detect host-local POSIX paths in prose without flagging URL or code examples.
