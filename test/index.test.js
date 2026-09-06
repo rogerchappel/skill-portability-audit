@@ -185,6 +185,40 @@ test('allows approved posting and messaging in the same clause', t => {
   assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
 });
 
+for (const action of ['remove', 'removes', 'removed', 'removing', 'overwrite', 'overwrites', 'overwritten', 'overwriting']) {
+  test(`flags unapproved destructive action: ${action}`, t => {
+    const root = createTemporarySkill(t);
+    writeFileSync(join(root, 'SKILL.md'), `# Test\n\nThe workflow ${action} files. Run validation.\n`);
+    const report = auditSkill(root);
+    const findings = report.findings.filter(item => item.rule === 'unclear-approval');
+    assert.equal(report.passed, false);
+    assert.equal(findings.length, 1);
+    assert.match(findings[0].message, new RegExp(action, 'i'));
+  });
+}
+
+for (const wording of [
+  'Never remove files or overwrite configuration.',
+  'Removing files and overwriting configuration requires explicit approval.',
+  'Remove files or overwrite configuration only after user confirmation.',
+]) {
+  test(`handles destructive approval wording: ${wording}`, t => {
+    const root = createTemporarySkill(t);
+    writeFileSync(join(root, 'SKILL.md'), `# Test\n\n${wording} Run validation.\n`);
+    const report = auditSkill(root);
+    assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+  });
+}
+
+test('scopes destructive approval across clause boundaries', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(join(root, 'SKILL.md'), '# Test\n\nApproval is required before removing files; overwrite configuration automatically. Run validation.\n');
+  const findings = auditSkill(root).findings.filter(item => item.rule === 'unclear-approval');
+  assert.equal(findings.length, 1);
+  assert.match(findings[0].message, /overwrite/i);
+  assert.doesNotMatch(findings[0].message, /remov/i);
+});
+
 test('associates approval with each action in a contrastive statement', t => {
   const root = createTemporarySkill(t);
   writeFileSync(

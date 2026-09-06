@@ -98,6 +98,7 @@ try {
     join(root, 'mixed-approval-SKILL.md'),
     '# Test\n\nApproval is required before deleting files; publish automatically. Run validation.\n'
   );
+  writeFileSync(join(root, 'destructive-SKILL.md'), '# Test\n\nRemove files and overwrite configuration. Run validation.\n');
 
   const unapproved = spawnSync(installedCli, [join(root, 'unapproved-SKILL.md'), '--json'], {
     cwd: root,
@@ -132,6 +133,19 @@ try {
     /delet/i.test(mixedApprovalFindings[0].message)
   ) {
     console.error('package smoke failed; installed CLI crossed a semicolon approval boundary');
+    process.exit(1);
+  }
+
+  const destructive = spawnSync(installedCli, [join(root, 'destructive-SKILL.md'), '--json'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  const destructiveReport = JSON.parse(destructive.stdout);
+  const destructiveFindings = destructiveReport.findings.filter(item => item.rule === 'unclear-approval');
+  if (destructive.status !== 1 || destructiveFindings.length !== 2 ||
+      !destructiveFindings.some(item => /remove/i.test(item.message)) ||
+      !destructiveFindings.some(item => /overwrite/i.test(item.message))) {
+    console.error('package smoke failed; installed CLI accepted unapproved remove/overwrite actions');
     process.exit(1);
   }
 
