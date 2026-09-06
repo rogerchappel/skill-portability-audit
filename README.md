@@ -38,7 +38,7 @@ process.stdout.write(renderMarkdown(report));
 
 ## Safety Notes
 
-This project is local-first and read-only. It prints plans or reports to stdout and does not call external services. Treat any generated mention of publishing, posting, deploying, sending, messaging, deleting, merging, charging, or emailing as requiring separate approval.
+This project is local-first and read-only. It prints plans or reports to stdout and does not call external services. Treat any generated mention of publishing, posting, deploying, sending, messaging, deleting, removing, overwriting, merging, charging, or emailing as requiring separate approval.
 
 ## Limitations
 
@@ -51,7 +51,7 @@ approval scope, so approval before it does not cover actions after it. Comma-sep
 sequential transitions (“then,” “next,” “afterwards,” “subsequently,” and “finally”)
 also start a new scope, while explicitly coordinated actions joined by “and” or “or”
 remain in one scope. Separate publish, post, deploy,
-send, message, delete, merge, charge, or email statements and wording such as
+send, message, delete, remove, overwrite, merge, charge, or email statements and wording such as
 “no approval is required” fail the audit. These statement and clause boundaries are text
 heuristics rather than a full Markdown or natural-language parser. Explicit
 prohibitions such as “does not publish” and “must not send” are not actionable
