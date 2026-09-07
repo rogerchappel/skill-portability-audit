@@ -306,6 +306,22 @@ test('allows one affirmative requirement to cover compound actions', t => {
   assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
 });
 
+test('does not let approval for a later action cover an earlier action', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    '# Test\n\nDeploy automatically and approval is required before deleting files. Run validation.\n'
+  );
+
+  const report = auditSkill(root);
+  const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(report.passed, false);
+  assert.equal(approvalFindings.length, 1);
+  assert.match(approvalFindings[0].message, /deploy/i);
+  assert.doesNotMatch(approvalFindings[0].message, /delet/i);
+});
+
 for (const coordinator of ['and', 'or']) {
   test(`preserves explicitly coordinated actions joined by ${coordinator}`, t => {
     const root = createTemporarySkill(t);
@@ -365,6 +381,24 @@ test('reports a sequential unapproved action through the CLI', t => {
   assert.equal(result.status, 1);
   assert.equal(approvalFindings.length, 1);
   assert.match(approvalFindings[0].message, /publish/i);
+});
+
+test('reports an earlier action when approval only governs a later action through the CLI', t => {
+  const root = createTemporarySkill(t);
+  const skill = join(root, 'SKILL.md');
+  writeFileSync(
+    skill,
+    '# Test\n\nDeploy automatically and approval is required before deleting files. Run validation.\n'
+  );
+
+  const result = spawnSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' });
+  const report = JSON.parse(result.stdout);
+  const approvalFindings = report.findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(result.status, 1);
+  assert.equal(approvalFindings.length, 1);
+  assert.match(approvalFindings[0].message, /deploy/i);
+  assert.doesNotMatch(approvalFindings[0].message, /delet/i);
 });
 
 test('returns a failing CLI result for a Windows absolute path', t => {
