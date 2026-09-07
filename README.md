@@ -55,7 +55,9 @@ send, message, delete, remove, overwrite, merge, charge, or email statements and
 “no approval is required” fail the audit. These statement and clause boundaries are text
 heuristics rather than a full Markdown or natural-language parser. Explicit
 prohibitions such as “does not publish” and “must not send” are not actionable
-side effects. Machine-specific home-directory paths and host-local POSIX paths
+side effects. The `post`, `posts`, `posted`, and `posting` action forms are
+detected, while hyphenated compounds such as `post-processing` are excluded.
+Machine-specific home-directory paths and host-local POSIX paths
 under `/opt`, `/var`, `/etc`, `/srv`, `/private`, `/tmp`, `/Applications`, or
 `/Volumes` fail the audit when they include one or more path components in prose.
 For example, both `/tmp/project` and `/var/project/config.json` are findings.
