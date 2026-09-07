@@ -159,7 +159,7 @@ test('preserves affirmative approval language for side effects', t => {
   assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
 });
 
-for (const action of ['Post an update', 'Posting an update', 'Message the project channel', 'Messaging the project channel']) {
+for (const action of ['Post an update', 'Posts an update', 'Posted an update', 'Posting an update', 'Message the project channel', 'Messaging the project channel']) {
   test(`flags unapproved live action: ${action}`, t => {
     const root = createTemporarySkill(t);
     writeFileSync(join(root, 'SKILL.md'), `# Test\n\n${action}. Run validation.\n`);
@@ -172,6 +172,31 @@ for (const action of ['Post an update', 'Posting an update', 'Message the projec
     assert.match(approvalFindings[0].message, new RegExp(action.split(' ')[0], 'i'));
   });
 }
+
+test('allows harmless hyphenated post compounds', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(
+    join(root, 'SKILL.md'),
+    '# Test\n\nUse local post-processing and post-production for images. Run validation.\n'
+  );
+
+  const report = auditSkill(root);
+
+  assert.equal(report.passed, true);
+  assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+});
+
+test('allows harmless hyphenated post compounds through the CLI', t => {
+  const root = createTemporarySkill(t);
+  const skill = join(root, 'SKILL.md');
+  writeFileSync(skill, '# Test\n\nUse local post-processing for images. Run validation.\n');
+
+  const result = spawnSync('./bin/cli.js', [skill, '--json'], { encoding: 'utf8' });
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 0);
+  assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+});
 
 test('allows approved posting and messaging in the same clause', t => {
   const root = createTemporarySkill(t);
