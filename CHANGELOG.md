@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Exclude harmless hyphenated `post-` compounds from approval findings while
+  retaining detection of post action verb forms.
+
 - Recognize remove and overwrite verb forms as approval-sensitive destructive actions.
 
 - Distinguish explicit side-effect prohibitions from actionable operations while
