@@ -4,6 +4,8 @@
 
 - Exclude harmless hyphenated `post-` compounds from approval findings while
   retaining detection of post action verb forms.
+- Associate forward approval requirements with the actions they govern instead
+  of suppressing unrelated earlier side effects in the same clause.
 
 - Recognize remove and overwrite verb forms as approval-sensitive destructive actions.
 

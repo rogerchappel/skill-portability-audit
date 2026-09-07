@@ -44,7 +44,9 @@ This project is local-first and read-only. It prints plans or reports to stdout 
 
 The heuristics are intentionally conservative. Approval words only satisfy the
 side-effect check when they state an affirmative requirement in the same clause
-as the action. One affirmative requirement can cover compound actions, but
+as the action. A forward requirement such as “approval is required before deleting”
+covers the actions after that requirement, not unrelated actions earlier in the
+clause. One affirmative requirement can cover compound actions, but
 approval for an action before “but,” “however,” “whereas,” or “while” does not
 cover actions after that contrastive boundary. A semicolon also starts a new
 approval scope, so approval before it does not cover actions after it. Comma-separated
