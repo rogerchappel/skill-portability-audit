@@ -22,6 +22,18 @@ function hasAffirmativeApprovalLanguage(text) {
   ).test(text);
 }
 
+function isActionCoveredByApproval(clause, actionIndex) {
+  if (!hasAffirmativeApprovalLanguage(clause)) return false;
+
+  const approval = String.raw`(?:approval|permission|confirmation)`;
+  const forwardRequirement = new RegExp(
+    String.raw`\b${approval}\s+(?:is\s+|must\s+be\s+)?(?:required|needed|obtained|requested|confirmed)\s+before\b`,
+    'i'
+  ).exec(clause);
+
+  return !forwardRequirement || actionIndex > forwardRequirement.index;
+}
+
 function isExplicitlyProhibited(clause, actionIndex) {
   const prefix = clause.slice(0, actionIndex);
   const negations = [...prefix.matchAll(/\b(?:never|(?:do(?:es)?|did|will|would|shall|should|must|may|might|can|could)\s+not)\b/gi)];
@@ -53,9 +65,10 @@ function findUnapprovedSideEffects(text) {
 
   for (const statement of statements) {
     for (const clause of statement.split(contrastiveBoundary).flatMap(part => part.split(sequentialBoundary))) {
-      if (hasAffirmativeApprovalLanguage(clause)) continue;
       for (const match of clause.matchAll(sideEffect)) {
-        if (!isExplicitlyProhibited(clause, match.index)) findings.push(match[0].toLowerCase());
+        if (!isExplicitlyProhibited(clause, match.index) && !isActionCoveredByApproval(clause, match.index)) {
+          findings.push(match[0].toLowerCase());
+        }
       }
     }
   }
