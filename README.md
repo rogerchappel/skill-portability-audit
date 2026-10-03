@@ -2,6 +2,8 @@
 
 Audit agent skills for portability, approvals, and local-machine assumptions.
 
+Requires Node.js 20 or newer (the supported range is `>=20`).
+
 ## Quickstart
 
 ```bash

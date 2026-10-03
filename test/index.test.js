@@ -454,6 +454,11 @@ test('reports semicolon-separated mixed approval through the CLI', t => {
   assert.doesNotMatch(approvalFindings[0].message, /delet/i);
 });
 
+test('declares Node.js 20 as the minimum supported runtime', () => {
+  const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
+  assert.equal(packageJson.engines?.node, '>=20');
+});
+
 test('prints stable help and version output', () => {
   const help = execFileSync('./bin/cli.js', ['--help'], { encoding: 'utf8' });
   const version = execFileSync('./bin/cli.js', ['--version'], { encoding: 'utf8' }).trim();
