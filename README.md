@@ -63,8 +63,8 @@ side effects. The `post`, `posts`, `posted`, and `posting` action forms are
 detected, while hyphenated compounds such as `post-processing` are excluded.
 Machine-specific home-directory paths and host-local POSIX paths
 under `/opt`, `/var`, `/etc`, `/srv`, `/private`, `/tmp`, `/Applications`, or
-`/Volumes` fail the audit when they include one or more path components in prose.
-For example, both `/tmp/project` and `/var/project/config.json` are findings.
+`/Volumes`, or `/root` fail the audit when they include one or more path components in prose.
+For example, both `/tmp/project` and `/var/project/config.json` are findings. Root-home paths such as `/root/project` are also flagged.
 URL and inline/fenced-code content is excluded from that check. Symbolic
 links are skipped so a directory audit cannot leave the requested skill tree or
 recurse through a link cycle. Review output before using it in an automated
