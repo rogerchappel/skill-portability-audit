@@ -109,7 +109,7 @@ test('does not treat negated approval as a side-effect prohibition', t => {
   assert.ok(report.findings.some(item => item.rule === 'unclear-approval'));
 });
 
-const hostLocalRoots = ['/opt', '/var', '/etc', '/srv', '/private', '/tmp', '/Applications', '/Volumes'];
+const hostLocalRoots = ['/opt', '/var', '/etc', '/srv', '/private', '/tmp', '/Applications', '/Volumes', '/root'];
 
 for (const posixPath of hostLocalRoots.flatMap(root => [
   `${root}/project`,
