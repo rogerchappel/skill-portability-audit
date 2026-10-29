@@ -6,7 +6,7 @@ function listMarkdown(root) {
   for (const entry of readdirSync(root)) {
     const path = join(root, entry);
     const stat = lstatSync(path);
-    if (stat.isDirectory() && !['node_modules','.git'].includes(entry)) out.push(...listMarkdown(path));
+    if (stat.isDirectory() && !stat.isSymbolicLink() && !['node_modules','.git'].includes(entry)) out.push(...listMarkdown(path));
     if (stat.isFile() && /(^SKILL\.md$|\.md$)/.test(entry)) out.push(path);
   }
   return out;
