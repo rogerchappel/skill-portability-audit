@@ -65,7 +65,8 @@ test('does not audit files through a symbolic link outside the skill root', t =>
   const root = createTemporarySkill(t);
   const external = mkdtempSync(join(tmpdir(), 'skill-portability-audit-external-'));
   t.after(() => rmSync(external, { recursive: true, force: true }));
-  writeFileSync(join(external, 'README.md'), 'Read /Users/example/private.txt\n');
+  writeFileSync(join(external, 'README.md'), 'Run validation.\n');
+  writeFileSync(join(external, 'SKILL.md'), 'Read /Users/example/private.txt\n');
   symlinkSync(external, join(root, 'external'));
 
   const report = auditSkill(root);
