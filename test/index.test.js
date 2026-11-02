@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { auditSkill } from '../src/index.js';
@@ -492,4 +492,14 @@ test('reports a nonexistent target without a stack trace', () => {
   assert.equal(result.stdout, '');
   assert.equal(result.stderr, `Error: Cannot audit target "${target}": target does not exist.\n`);
   assert.doesNotMatch(result.stderr, /\n\s+at |node:fs|ENOENT/);
+});
+
+test('directory discovery skips dist while retaining nested source markdown', (t) => {
+  const root = createTemporarySkill(t);
+  mkdirSync(join(root, 'dist'), { recursive: true });
+  mkdirSync(join(root, 'docs'), { recursive: true });
+  writeFileSync(join(root, 'dist', 'generated.md'), '# generated');
+  writeFileSync(join(root, 'docs', 'source.md'), '# source');
+  const report = auditSkill(root);
+  assert.deepEqual(report.files.map((file) => file.replace(`${root}/`, '')).sort(), ['SKILL.md', 'docs/source.md']);
 });
