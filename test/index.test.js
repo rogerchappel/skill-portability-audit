@@ -101,6 +101,25 @@ for (const prohibition of [
   });
 }
 
+test('recognizes affirmative approval after a negated contrasting clause', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(join(root, 'SKILL.md'), '# Test\n\nApproval is not required for reading files, but publishing updates requires explicit approval. Run validation.\n');
+
+  const report = auditSkill(root);
+
+  assert.equal(report.findings.some(item => item.rule === 'unclear-approval'), false);
+});
+
+test('does not let affirmative approval after a contrast cover the earlier action', t => {
+  const root = createTemporarySkill(t);
+  writeFileSync(join(root, 'SKILL.md'), '# Test\n\nPublish automatically, but approval is not required for reading files. Run validation.\n');
+
+  const findings = auditSkill(root).findings.filter(item => item.rule === 'unclear-approval');
+
+  assert.equal(findings.length, 1);
+  assert.match(findings[0].message, /publish/i);
+});
+
 test('does not treat negated approval as a side-effect prohibition', t => {
   const root = createTemporarySkill(t);
   writeFileSync(join(root, 'SKILL.md'), '# Test\n\nPublishing does not require approval. Run validation.\n');
