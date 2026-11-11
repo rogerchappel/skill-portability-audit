@@ -3,11 +3,15 @@ import { basename, dirname, join, resolve } from 'node:path';
 
 function listMarkdown(root) {
   const out = [];
-  for (const entry of readdirSync(root)) {
-    const path = join(root, entry);
-    const stat = lstatSync(path);
-    if (stat.isDirectory() && !stat.isSymbolicLink() && !['node_modules', '.git', 'dist'].includes(entry)) out.push(...listMarkdown(path));
-    if (stat.isFile() && /(^SKILL\.md$|\.md$)/.test(entry)) out.push(path);
+  const pending = [root];
+  while (pending.length > 0) {
+    const directory = pending.pop();
+    for (const entry of readdirSync(directory)) {
+      const path = join(directory, entry);
+      const stat = lstatSync(path);
+      if (stat.isDirectory() && !['node_modules', '.git', 'dist'].includes(entry)) pending.push(path);
+      else if (stat.isFile() && /(^SKILL\.md$|\.md$)/.test(entry)) out.push(path);
+    }
   }
   return out;
 }
