@@ -522,3 +522,16 @@ test('directory discovery skips dist while retaining nested source markdown', (t
   const report = auditSkill(root);
   assert.deepEqual(report.files.map((file) => file.replace(`${root}/`, '')).sort(), ['SKILL.md', 'docs/source.md']);
 });
+
+
+test('discovers markdown in deeply nested directories without recursion', (t) => {
+  const root = createTemporarySkill(t);
+  const deep = join(root, ...Array.from({ length: 120 }, () => 'd'));
+  mkdirSync(deep, { recursive: true });
+  writeFileSync(join(deep, 'nested.md'), '# Deep source');
+
+  const report = auditSkill(root);
+
+  assert.equal(report.files.length, 2);
+  assert.ok(report.files.some((file) => file.endsWith('/nested.md')));
+});
