@@ -31,9 +31,19 @@ try {
   const [packument] = JSON.parse(result.stdout);
   const packedFiles = new Set(packument.files.map((file) => file.path));
   const missing = requiredFiles.filter((file) => !packedFiles.has(file));
+  const developmentOnlyFiles = packedFiles.values().filter((file) =>
+    file.startsWith('test/') ||
+    file.startsWith('.github/') ||
+    file === 'package-lock.json'
+  );
 
   if (missing.length > 0) {
     console.error(`package smoke failed; missing files: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+
+  if (developmentOnlyFiles.length > 0) {
+    console.error(`package smoke failed; development-only files included: ${developmentOnlyFiles.join(', ')}`);
     process.exit(1);
   }
 
@@ -149,7 +159,7 @@ try {
     process.exit(1);
   }
 
-  console.log(`package smoke passed; installed package exposes library API and CLI (${requiredFiles.length} required files)`);
+  console.log(`package smoke passed; installed package exposes library API and CLI (${requiredFiles.length} required files; no development-only files)`);
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
